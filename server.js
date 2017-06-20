@@ -178,7 +178,7 @@ var SampleApp = function() {
                         const isHost = !playerData.players.filter(player => player.games.indexOf(req.params.gameid)+1).length;
                         const gamesJSON = fs.readFileSync('./src/games.json', 'utf8');
                         const gameData = JSON.parse(gamesJSON);
-                        const game = gameData.games.filter(game => game.id == req.params.gameid);
+                        const thisGame = gameData.games.filter(game => game.id == req.params.gameid).pop();
                         let hash = `#${req.params.gameid}`;
 
                         // JOINING
@@ -202,12 +202,12 @@ var SampleApp = function() {
                             }
 
                             if (isHost) {
-                                gameData.games[req.params.gameid].verified = parseInt(steamData.steamid);
+                                gameData.games[gameData.games.indexOf(thisGame)].verified = parseInt(steamData.steamid);
                                 fs.writeFileSync('./src/games.json', JSON.stringify(gameData), 'utf8');
                             }
                         // LEAVING
                         } else if (steamData.steamid == req.params.steamid) {
-                            const gameDay = new Date(game[0].day);
+                            const gameDay = new Date(thisGame.day);
                                 gameDay.setHours(0);
                                 gameDay.setMinutes(0);
                                 gameDay.setSeconds(0);

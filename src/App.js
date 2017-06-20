@@ -61,7 +61,7 @@ export default class App extends Component {
 						let ampm = '';
 
 						if (this.state.format) {
-							ampm = hours > 12 ? "PM":"AM";
+							ampm = hours < 12 ? "AM":"PM";
 							hours = hours > 12 ? hours - this.state.format : hours;
 						}
 						
