@@ -10,7 +10,7 @@ var compiler = webpack(config);
 var openid = require('openid');
 var xss = require('xss');
 var fs = require('fs');
-var addr = "http://localhost:8080/"
+var addr = "http://civ6nq.com/"
 var apiKey = 'E3FD132D76BAF9967E0A0C9BFA3C689D';
 
 function getUserData(apiKey, id, callback){
