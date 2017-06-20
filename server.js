@@ -259,7 +259,7 @@ var SampleApp = function() {
             const json = JSON.parse(data);
 
             json.games.push(req.body);
-            json.games[json.games.length-1]['id'] = json.games[json.games.length-2]['id'];
+            json.games[json.games.length-1]['id'] = json.games[json.games.length-2]['id']+1;
             json.games[json.games.length-1]['verified'] = false;
             json.games[json.games.length-1]['description'] = xss(json.games[json.games.length-1]['description']);
 
