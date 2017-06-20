@@ -135,7 +135,7 @@ var SampleApp = function() {
           });
         };
 
-        self.routes['*api/auth/:gameid*?/:steamid*?'] = function(req, res) {
+        self.routes['*api/auth/:gameid?/:steamid?'] = function(req, res) {
             relyingParty.returnUrl = addr + 'api/verify' + (req.params.gameid? '/' + req.params.gameid : '') + (req.params.steamid? '/' + req.params.steamid : '');
             relyingParty.authenticate('http://steamcommunity.com/openid', false, function(error, authURL) {
                     if (error) {
@@ -151,13 +151,15 @@ var SampleApp = function() {
               });
         };
         
-        self.routes['*api/verify/:gameid*?/:steamid*?'] = function(req, res) {
+        self.routes['*api/verify/:gameid?/:steamid?'] = function(req, res) {
             relyingParty.verifyAssertion(req, function(err, result) {
                 if(err){
                     // console.log(JSON.stringify(err));
                     res.end("Error.")
                 } else if(!result || !result.authenticated){
                     res.end('Failed to authenticate user.');
+
+                // my games
                 } else if(!req.params.gameid) {
                     steamID = result.claimedIdentifier.replace('http://steamcommunity.com/openid/id/', '');
                     getUserData(apiKey, steamID, function(steamData){
@@ -177,6 +179,7 @@ var SampleApp = function() {
                         const gamesJSON = fs.readFileSync('./src/games.json', 'utf8');
                         const gameData = JSON.parse(gamesJSON);
                         const game = gameData.games.filter(game => game.id == req.params.gameid);
+                        let hash = `#${req.params.gameid}`;
 
                         // JOINING
                         if (!req.params.steamid) {
@@ -209,18 +212,24 @@ var SampleApp = function() {
                                 gameDay.setMinutes(0);
                                 gameDay.setSeconds(0);
                             const isQuitter = new Date() >= gameDay;
+                            let players = 0;
                             playerData.players.map(player => {
                                 if (player.steamid == steamData.steamid) {
                                     player.games = player.games.filter(gameid => gameid != req.params.gameid);
                                     if (isQuitter && player.quitter.quit.indexOf(req.params.gameid) === -1) player.quitter.quit.push(req.params.gameid);
                                 }
+                                if (player.games.indexOf(req.params.gameid)+1) players++;
                                 return player;
                             });
+                            if (!players) {
+                                gameData.games = gameData.games.filter(game => game.id != req.params.gameid);
+                                fs.writeFileSync('./src/games.json', JSON.stringify(gameData), 'utf8');
+                                hash = '';
+                            }
                             fs.writeFileSync('./src/players.json', JSON.stringify(playerData), 'utf8');
                         }
 
-                        res.writeHead(301, {Location: `/?steamid=${steamData.steamid}#${req.params.gameid}`,
-  'Cache-Control': 'no-cache'});
+                        res.writeHead(301, {Location: `/?steamid=${steamData.steamid}${hash}`, 'Cache-Control': 'no-cache'});
                         res.end();
                     });
                 }
@@ -250,7 +259,7 @@ var SampleApp = function() {
             const json = JSON.parse(data);
 
             json.games.push(req.body);
-            json.games[json.games.length-1]['id'] = json.games.length-1;
+            json.games[json.games.length-1]['id'] = json.games[json.games.length-2]['id'];
             json.games[json.games.length-1]['verified'] = false;
             json.games[json.games.length-1]['description'] = xss(json.games[json.games.length-1]['description']);
 
